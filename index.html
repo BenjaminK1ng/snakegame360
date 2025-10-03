@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>360° Snake Game</title>
+    <title>Snake Game - 4 Direction</title>
     <meta name="theme-color" content="#2e7d32">
-    <meta name="description" content="A snake game with 360° movement control">
+    <meta name="description" content="A classic snake game with 4-direction movement">
     <link rel="stylesheet" href="style.css">
     
     <!-- PWA Meta Tags -->
@@ -13,13 +13,13 @@
     <link rel="icon" href="icons/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="360° Snake">
+    <meta name="apple-mobile-web-app-title" content="Snake Game">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>360° Snake</h1>
+            <h1>Snake Game</h1>
             <div class="score-container">
                 <div class="score">Score: <span id="score">0</span></div>
                 <div class="high-score">Best: <span id="highScore">0</span></div>
@@ -34,18 +34,28 @@
                 <button id="restartButton" class="restart-button">Play Again</button>
             </div>
             <div id="startScreen" class="start-screen">
-                <h2>360° Snake</h2>
-                <p>Drag anywhere to control the snake</p>
+                <h2>Snake Game</h2>
+                <p>Use the directional buttons to move the snake</p>
                 <button id="startButton" class="start-button">Start Game</button>
             </div>
         </div>
 
         <div class="controls">
             <div class="control-info">
-                <p>Drag anywhere to move the snake</p>
+                <p>Tap buttons to change direction</p>
             </div>
-            <div class="touch-area" id="touchArea">
-                <div class="touch-indicator"></div>
+            <div class="dpad">
+                <div class="dpad-row">
+                    <button id="upButton" class="dir-button up-button">↑</button>
+                </div>
+                <div class="dpad-row">
+                    <button id="leftButton" class="dir-button left-button">←</button>
+                    <div class="dpad-center"></div>
+                    <button id="rightButton" class="dir-button right-button">→</button>
+                </div>
+                <div class="dpad-row">
+                    <button id="downButton" class="dir-button down-button">↓</button>
+                </div>
             </div>
         </div>
 
