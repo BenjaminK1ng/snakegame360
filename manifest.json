@@ -1,7 +1,7 @@
 {
-    "name": "360° Snake Game",
-    "short_name": "360° Snake",
-    "description": "A snake game with 360° movement control for mobile",
+    "name": "Snake Game - 4 Direction",
+    "short_name": "Snake Game",
+    "description": "A classic snake game with 4-direction movement for mobile",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#1b5e20",
@@ -30,7 +30,7 @@
             "sizes": "512x512",
             "type": "image/png",
             "form_factor": "wide",
-            "label": "360° Snake Game gameplay"
+            "label": "Snake Game gameplay"
         }
     ]
 }
