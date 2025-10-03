@@ -9,14 +9,23 @@ class SnakeGame {
         this.startScreenElement = document.getElementById('startScreen');
         this.startButton = document.getElementById('startButton');
         this.restartButton = document.getElementById('restartButton');
-        this.touchArea = document.getElementById('touchArea');
-        this.touchIndicator = document.querySelector('.touch-indicator');
+        
+        // Direction buttons
+        this.upButton = document.getElementById('upButton');
+        this.downButton = document.getElementById('downButton');
+        this.leftButton = document.getElementById('leftButton');
+        this.rightButton = document.getElementById('rightButton');
         
         // PWA elements
         this.installPrompt = document.getElementById('installPrompt');
         this.installButton = document.getElementById('installButton');
         this.dismissInstall = document.getElementById('dismissInstall');
         this.deferredPrompt = null;
+        
+        // Game settings
+        this.gridSize = 20;
+        this.moveInterval = 300; // Slower movement (300ms between moves)
+        this.gameLoop = null;
         
         this.setupCanvas();
         this.setupEventListeners();
@@ -30,11 +39,10 @@ class SnakeGame {
 
     setupCanvas() {
         // Set canvas size based on screen size
-        const size = Math.min(window.innerWidth - 40, window.innerHeight * 0.7);
+        const size = Math.min(window.innerWidth - 40, window.innerHeight * 0.6);
         this.canvas.width = size;
         this.canvas.height = size;
         
-        this.gridSize = 20;
         this.gridWidth = Math.floor(this.canvas.width / this.gridSize);
         this.gridHeight = Math.floor(this.canvas.height / this.gridSize);
     }
@@ -43,28 +51,46 @@ class SnakeGame {
         this.startButton.addEventListener('click', () => this.startGame());
         this.restartButton.addEventListener('click', () => this.startGame());
         
-        // Touch events for 360° movement
-        this.touchArea.addEventListener('touchstart', (e) => this.handleTouchStart(e));
-        this.touchArea.addEventListener('touchmove', (e) => this.handleTouchMove(e));
-        this.touchArea.addEventListener('touchend', () => this.handleTouchEnd());
+        // Direction button events
+        this.upButton.addEventListener('click', () => this.changeDirection('up'));
+        this.downButton.addEventListener('click', () => this.changeDirection('down'));
+        this.leftButton.addEventListener('click', () => this.changeDirection('left'));
+        this.rightButton.addEventListener('click', () => this.changeDirection('right'));
         
-        // Mouse events for testing on desktop
-        this.touchArea.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        this.touchArea.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        this.touchArea.addEventListener('mouseup', () => this.handleTouchEnd());
-        this.touchArea.addEventListener('mouseleave', () => this.handleTouchEnd());
+        // Keyboard support for testing
+        document.addEventListener('keydown', (e) => {
+            if (!this.gameActive) return;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.changeDirection('up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.changeDirection('down');
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    this.changeDirection('left');
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    this.changeDirection('right');
+                    break;
+            }
+        });
         
         // PWA install events
         this.installButton.addEventListener('click', () => this.installPWA());
         this.dismissInstall.addEventListener('click', () => this.hideInstallPrompt());
         
-        // Prevent context menu
-        this.touchArea.addEventListener('contextmenu', (e) => e.preventDefault());
-        
         // Handle window resize
         window.addEventListener('resize', () => {
             this.setupCanvas();
-            this.draw();
+            if (this.gameActive) {
+                this.draw();
+            }
         });
     }
 
@@ -130,16 +156,26 @@ class SnakeGame {
     }
 
     resetGame() {
+        // Initialize snake in the center
+        const startX = Math.floor(this.gridWidth / 2);
+        const startY = Math.floor(this.gridHeight / 2);
+        
         this.snake = [
-            { x: Math.floor(this.gridWidth / 2), y: Math.floor(this.gridHeight / 2) }
+            { x: startX, y: startY },
+            { x: startX - 1, y: startY },
+            { x: startX - 2, y: startY }
         ];
-        this.direction = { x: 0, y: 0 };
+        
+        this.direction = 'right';
+        this.nextDirection = 'right';
         this.food = this.generateFood();
         this.score = 0;
         this.gameActive = false;
-        this.touchActive = false;
-        this.touchStart = { x: 0, y: 0 };
-        this.touchCurrent = { x: 0, y: 0 };
+        
+        if (this.gameLoop) {
+            clearInterval(this.gameLoop);
+            this.gameLoop = null;
+        }
         
         this.scoreElement.textContent = this.score;
     }
@@ -149,149 +185,52 @@ class SnakeGame {
         this.gameActive = true;
         this.gameOverElement.classList.add('hidden');
         this.startScreenElement.classList.add('hidden');
+        
+        // Start the game loop with slower movement
+        this.gameLoop = setInterval(() => {
+            this.moveSnake();
+        }, this.moveInterval);
+        
         this.draw();
     }
 
-    generateFood() {
-        let food;
-        let onSnake;
-        
-        do {
-            onSnake = false;
-            food = {
-                x: Math.floor(Math.random() * this.gridWidth),
-                y: Math.floor(Math.random() * this.gridHeight)
-            };
-            
-            // Check if food is on snake
-            for (let segment of this.snake) {
-                if (segment.x === food.x && segment.y === food.y) {
-                    onSnake = true;
-                    break;
-                }
-            }
-        } while (onSnake);
-        
-        return food;
-    }
-
-    handleTouchStart(e) {
+    changeDirection(newDirection) {
         if (!this.gameActive) return;
         
-        e.preventDefault();
-        this.touchActive = true;
-        const rect = this.touchArea.getBoundingClientRect();
-        const touch = e.touches ? e.touches[0] : e;
-        
-        this.touchStart.x = touch.clientX - rect.left;
-        this.touchStart.y = touch.clientY - rect.top;
-        this.touchCurrent.x = this.touchStart.x;
-        this.touchCurrent.y = this.touchStart.y;
-        
-        this.updateTouchIndicator();
-    }
-
-    handleTouchMove(e) {
-        if (!this.touchActive || !this.gameActive) return;
-        
-        e.preventDefault();
-        const rect = this.touchArea.getBoundingClientRect();
-        const touch = e.touches ? e.touches[0] : e;
-        
-        this.touchCurrent.x = touch.clientX - rect.left;
-        this.touchCurrent.y = touch.clientY - rect.top;
-        
-        this.calculateDirection();
-        this.updateTouchIndicator();
-        this.moveSnake();
-    }
-
-    handleMouseDown(e) {
-        if (!this.gameActive) return;
-        
-        e.preventDefault();
-        this.touchActive = true;
-        const rect = this.touchArea.getBoundingClientRect();
-        
-        this.touchStart.x = e.clientX - rect.left;
-        this.touchStart.y = e.clientY - rect.top;
-        this.touchCurrent.x = this.touchStart.x;
-        this.touchCurrent.y = this.touchStart.y;
-        
-        this.updateTouchIndicator();
-    }
-
-    handleMouseMove(e) {
-        if (!this.touchActive || !this.gameActive) return;
-        
-        e.preventDefault();
-        const rect = this.touchArea.getBoundingClientRect();
-        
-        this.touchCurrent.x = e.clientX - rect.left;
-        this.touchCurrent.y = e.clientY - rect.top;
-        
-        this.calculateDirection();
-        this.updateTouchIndicator();
-        this.moveSnake();
-    }
-
-    handleTouchEnd() {
-        this.touchActive = false;
-        this.touchIndicator.style.transform = 'translate(-50%, -50%)';
-    }
-
-    calculateDirection() {
-        const dx = this.touchCurrent.x - this.touchStart.x;
-        const dy = this.touchCurrent.y - this.touchStart.y;
-        
-        // Calculate angle in radians
-        let angle = Math.atan2(dy, dx);
-        
-        // Convert to direction vector
-        const magnitude = Math.min(1, Math.sqrt(dx * dx + dy * dy) / 50);
-        
-        this.direction.x = Math.cos(angle) * magnitude;
-        this.direction.y = Math.sin(angle) * magnitude;
-        
-        // Normalize to grid movement (only one axis at a time for classic snake feel)
-        // But for true 360 movement, we'll keep both components
-        if (Math.abs(this.direction.x) > Math.abs(this.direction.y)) {
-            this.direction.y = 0;
-            this.direction.x = this.direction.x > 0 ? 1 : -1;
-        } else {
-            this.direction.x = 0;
-            this.direction.y = this.direction.y > 0 ? 1 : -1;
+        // Prevent 180-degree turns (opposite direction)
+        if (
+            (newDirection === 'up' && this.direction !== 'down') ||
+            (newDirection === 'down' && this.direction !== 'up') ||
+            (newDirection === 'left' && this.direction !== 'right') ||
+            (newDirection === 'right' && this.direction !== 'left')
+        ) {
+            this.nextDirection = newDirection;
         }
-    }
-
-    updateTouchIndicator() {
-        if (!this.touchActive) return;
-        
-        const rect = this.touchArea.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const dx = this.touchCurrent.x - centerX;
-        const dy = this.touchCurrent.y - centerY;
-        
-        // Limit movement to within the circle
-        const distance = Math.min(Math.sqrt(dx * dx + dy * dy), centerX - 15);
-        const angle = Math.atan2(dy, dx);
-        
-        const indicatorX = centerX + Math.cos(angle) * distance;
-        const indicatorY = centerY + Math.sin(angle) * distance;
-        
-        this.touchIndicator.style.transform = `translate(${indicatorX - centerX}px, ${indicatorY - centerY}px)`;
     }
 
     moveSnake() {
         if (!this.gameActive) return;
         
+        // Update direction
+        this.direction = this.nextDirection;
+        
         const head = { ...this.snake[0] };
         
         // Calculate new head position based on direction
-        head.x += this.direction.x;
-        head.y += this.direction.y;
+        switch(this.direction) {
+            case 'up':
+                head.y -= 1;
+                break;
+            case 'down':
+                head.y += 1;
+                break;
+            case 'left':
+                head.x -= 1;
+                break;
+            case 'right':
+                head.x += 1;
+                break;
+        }
         
         // Check for wall collision
         if (head.x < 0 || head.x >= this.gridWidth || head.y < 0 || head.y >= this.gridHeight) {
@@ -330,6 +269,29 @@ class SnakeGame {
         this.draw();
     }
 
+    generateFood() {
+        let food;
+        let onSnake;
+        
+        do {
+            onSnake = false;
+            food = {
+                x: Math.floor(Math.random() * this.gridWidth),
+                y: Math.floor(Math.random() * this.gridHeight)
+            };
+            
+            // Check if food is on snake
+            for (let segment of this.snake) {
+                if (segment.x === food.x && segment.y === food.y) {
+                    onSnake = true;
+                    break;
+                }
+            }
+        } while (onSnake);
+        
+        return food;
+    }
+
     draw() {
         // Clear canvas
         this.ctx.fillStyle = '#1a1a1a';
@@ -355,58 +317,105 @@ class SnakeGame {
         
         // Draw snake
         this.snake.forEach((segment, index) => {
-            const gradient = this.ctx.createLinearGradient(
-                segment.x * this.gridSize,
-                segment.y * this.gridSize,
-                (segment.x + 1) * this.gridSize,
-                (segment.y + 1) * this.gridSize
-            );
-            
             if (index === 0) {
-                // Head
-                gradient.addColorStop(0, '#4caf50');
-                gradient.addColorStop(1, '#45a049');
+                // Snake head
+                this.ctx.fillStyle = '#4caf50';
+                this.ctx.fillRect(
+                    segment.x * this.gridSize + 1,
+                    segment.y * this.gridSize + 1,
+                    this.gridSize - 2,
+                    this.gridSize - 2
+                );
+                
+                // Draw eyes based on direction
+                this.ctx.fillStyle = '#1b5e20';
+                const eyeSize = 3;
+                const offset = 4;
+                
+                switch(this.direction) {
+                    case 'up':
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + offset,
+                            segment.y * this.gridSize + offset,
+                            eyeSize, eyeSize
+                        );
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + this.gridSize - offset - eyeSize,
+                            segment.y * this.gridSize + offset,
+                            eyeSize, eyeSize
+                        );
+                        break;
+                    case 'down':
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + offset,
+                            segment.y * this.gridSize + this.gridSize - offset - eyeSize,
+                            eyeSize, eyeSize
+                        );
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + this.gridSize - offset - eyeSize,
+                            segment.y * this.gridSize + this.gridSize - offset - eyeSize,
+                            eyeSize, eyeSize
+                        );
+                        break;
+                    case 'left':
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + offset,
+                            segment.y * this.gridSize + offset,
+                            eyeSize, eyeSize
+                        );
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + offset,
+                            segment.y * this.gridSize + this.gridSize - offset - eyeSize,
+                            eyeSize, eyeSize
+                        );
+                        break;
+                    case 'right':
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + this.gridSize - offset - eyeSize,
+                            segment.y * this.gridSize + offset,
+                            eyeSize, eyeSize
+                        );
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + this.gridSize - offset - eyeSize,
+                            segment.y * this.gridSize + this.gridSize - offset - eyeSize,
+                            eyeSize, eyeSize
+                        );
+                        break;
+                }
             } else {
-                // Body
-                gradient.addColorStop(0, '#388e3c');
-                gradient.addColorStop(1, '#2e7d32');
+                // Snake body
+                this.ctx.fillStyle = '#388e3c';
+                this.ctx.fillRect(
+                    segment.x * this.gridSize + 1,
+                    segment.y * this.gridSize + 1,
+                    this.gridSize - 2,
+                    this.gridSize - 2
+                );
+                
+                // Add rounded corners for body segments
+                this.ctx.fillStyle = '#2e7d32';
+                const cornerSize = 2;
+                this.ctx.fillRect(
+                    segment.x * this.gridSize + 1,
+                    segment.y * this.gridSize + 1,
+                    cornerSize, cornerSize
+                );
+                this.ctx.fillRect(
+                    (segment.x + 1) * this.gridSize - cornerSize - 1,
+                    segment.y * this.gridSize + 1,
+                    cornerSize, cornerSize
+                );
+                this.ctx.fillRect(
+                    segment.x * this.gridSize + 1,
+                    (segment.y + 1) * this.gridSize - cornerSize - 1,
+                    cornerSize, cornerSize
+                );
+                this.ctx.fillRect(
+                    (segment.x + 1) * this.gridSize - cornerSize - 1,
+                    (segment.y + 1) * this.gridSize - cornerSize - 1,
+                    cornerSize, cornerSize
+                );
             }
-            
-            this.ctx.fillStyle = gradient;
-            this.ctx.fillRect(
-                segment.x * this.gridSize + 1,
-                segment.y * this.gridSize + 1,
-                this.gridSize - 2,
-                this.gridSize - 2
-            );
-            
-            // Add rounded corners
-            this.ctx.fillStyle = index === 0 ? '#81c784' : '#66bb6a';
-            const cornerSize = 3;
-            this.ctx.fillRect(
-                segment.x * this.gridSize + 1,
-                segment.y * this.gridSize + 1,
-                cornerSize,
-                cornerSize
-            );
-            this.ctx.fillRect(
-                (segment.x + 1) * this.gridSize - cornerSize - 1,
-                segment.y * this.gridSize + 1,
-                cornerSize,
-                cornerSize
-            );
-            this.ctx.fillRect(
-                segment.x * this.gridSize + 1,
-                (segment.y + 1) * this.gridSize - cornerSize - 1,
-                cornerSize,
-                cornerSize
-            );
-            this.ctx.fillRect(
-                (segment.x + 1) * this.gridSize - cornerSize - 1,
-                (segment.y + 1) * this.gridSize - cornerSize - 1,
-                cornerSize,
-                cornerSize
-            );
         });
         
         // Draw food
@@ -438,6 +447,11 @@ class SnakeGame {
         this.gameActive = false;
         this.finalScoreElement.textContent = this.score;
         this.gameOverElement.classList.remove('hidden');
+        
+        if (this.gameLoop) {
+            clearInterval(this.gameLoop);
+            this.gameLoop = null;
+        }
     }
 }
 
@@ -448,9 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Prevent scrolling on touch
 document.addEventListener('touchmove', (e) => {
-    if (e.target.classList.contains('touch-area') || 
-        e.target.id === 'gameCanvas' ||
-        e.target.closest('.touch-area')) {
+    if (e.target.classList.contains('dir-button')) {
         e.preventDefault();
     }
 }, { passive: false });
