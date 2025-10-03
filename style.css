@@ -1,0 +1,257 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1b5e20, #2e7d32);
+    color: white;
+    min-height: 100vh;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.container {
+    max-width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.score-container {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 8px;
+    margin: 0 auto;
+    max-width: 300px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.score, .high-score {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.game-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin: 10px 0;
+}
+
+#gameCanvas {
+    background: #1a1a1a;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    max-width: 100%;
+    max-height: 70vh;
+    aspect-ratio: 1;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-over, .start-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 80%;
+    max-width: 300px;
+}
+
+.game-over h2, .start-screen h2 {
+    color: #4caf50;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+.game-over p, .start-screen p {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.restart-button, .start-button {
+    background: linear-gradient(145deg, #4caf50, #45a049);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.restart-button:active, .start-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.hidden {
+    display: none;
+}
+
+.controls {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.control-info {
+    margin-bottom: 10px;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.touch-area {
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    margin: 0 auto;
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.touch-indicator {
+    width: 30px;
+    height: 30px;
+    background: rgba(76, 175, 80, 0.7);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.1s ease;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+/* PWA Install Prompt */
+.install-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 15px;
+    padding: 0;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 350px;
+}
+
+.install-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.install-content h3 {
+    color: #4caf50;
+    margin-bottom: 10px;
+}
+
+.install-content p {
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+
+.install-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.install-button, .dismiss-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    max-width: 120px;
+}
+
+.install-button {
+    background: #4caf50;
+    color: white;
+}
+
+.dismiss-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.install-button:active, .dismiss-button:active {
+    transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-height: 700px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .score, .high-score {
+        font-size: 0.9rem;
+    }
+    
+    .touch-area {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+/* PWA standalone mode adjustments */
+@media (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        background: #1b5e20;
+    }
+    
+    .container {
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Prevent blue highlight on touch */
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}

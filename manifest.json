@@ -1,0 +1,36 @@
+{
+    "name": "360° Snake Game",
+    "short_name": "360° Snake",
+    "description": "A snake game with 360° movement control for mobile",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#1b5e20",
+    "theme_color": "#2e7d32",
+    "orientation": "portrait",
+    "scope": "./",
+    "lang": "en",
+    "categories": ["games", "entertainment"],
+    "icons": [
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "360° Snake Game gameplay"
+        }
+    ]
+}

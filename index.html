@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>360° Snake Game</title>
+    <meta name="theme-color" content="#2e7d32">
+    <meta name="description" content="A snake game with 360° movement control">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="360° Snake">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>360° Snake</h1>
+            <div class="score-container">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="high-score">Best: <span id="highScore">0</span></div>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <canvas id="gameCanvas"></canvas>
+            <div id="gameOver" class="game-over hidden">
+                <h2>Game Over!</h2>
+                <p>Your score: <span id="finalScore">0</span></p>
+                <button id="restartButton" class="restart-button">Play Again</button>
+            </div>
+            <div id="startScreen" class="start-screen">
+                <h2>360° Snake</h2>
+                <p>Drag anywhere to control the snake</p>
+                <button id="startButton" class="start-button">Start Game</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-info">
+                <p>Drag anywhere to move the snake</p>
+            </div>
+            <div class="touch-area" id="touchArea">
+                <div class="touch-indicator"></div>
+            </div>
+        </div>
+
+        <!-- PWA Install Prompt -->
+        <div id="installPrompt" class="install-prompt hidden">
+            <div class="install-content">
+                <h3>Install Snake Game</h3>
+                <p>Install for better experience and offline play</p>
+                <div class="install-buttons">
+                    <button id="installButton" class="install-button">Install</button>
+                    <button id="dismissInstall" class="dismiss-button">Not Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
